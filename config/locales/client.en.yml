@@ -1,23 +1,7 @@
 en:
   js:
-    admin:
-      logs:
-        staff_actions:
-          actions:
-            confirmed_ham: "confirmed not spam"
-            confirmed_spam: "confirmed spam"
-            confirmed_spam_deleted: "confirmed spam and deleted user"
-
     akismet:
       title: "Akismet"
-      confirm_spam: "Confirm Spam"
-      not_spam: "Not Spam"
-      confirm_delete: "Confirm Spam & Delete User"
-      post_id: "Post ID"
-      post_body: "Body"
-      posted_by: "Posted By"
-      refresh: "Refresh Posts"
-      posts_to_review: "Posts to Review"
 
       stats:
         scanned: "Scanned"
@@ -25,7 +9,6 @@ en:
         confirmed_spam: "Staff Confirmed Spam"
         confirmed_ham: "Staff Confirmed Not Spam"
 
-      delete_prompt: "Are you sure you want to delete <b>%{username}</b>? This will remove all of their posts and block their email and ip address."
       not_enabled: "Akismet is not enabled right now."
       change_settings: "Change Settings"
 

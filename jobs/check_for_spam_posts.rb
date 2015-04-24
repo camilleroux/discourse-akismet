@@ -7,11 +7,7 @@ module Jobs
       return if SiteSetting.akismet_api_key.blank?
 
       # Users above TL0 are checked in batches
-      to_check = DiscourseAkismet.to_check
-                                 .includes(:post => :user)
-                                 .where('users.trust_level > 0')
-
-      DiscourseAkismet.check_for_spam(to_check.map(&:post))
+      DiscourseAkismet.check_for_spam(DiscourseAkismet.to_check)
     end
   end
 end

@@ -1,5 +1,5 @@
-{{#if enabled}}
-  {{#if stats}}
+{{#if model.enabled}}
+  {{#if model.stats}}
     <table class='tbl spam-stats'>
       <tr>
         <th>{{i18n "akismet.stats.scanned"}}</th>
@@ -8,72 +8,16 @@
         <th>{{i18n "akismet.stats.confirmed_ham"}}</th>
       </tr>
       <tr>
-        <td>{{stats.scanned}}</td>
-        <td>{{stats.needs_review}}</td>
-        <td>{{stats.confirmed_spam}}</td>
-        <td>{{stats.confirmed_ham}}</td>
+        <td>{{model.stats.scanned}}</td>
+        <td>{{model.stats.needs_review}}</td>
+        <td>{{model.stats.confirmed_spam}}</td>
+        <td>{{model.stats.confirmed_ham}}</td>
       </tr>
     </table>
   {{/if}}
 
   {{#if currentUser.admin}}
     {{d-button label="admin.plugins.change_settings" icon="gear" class='settings-button' action="showSettings"}}
-  {{/if}}
-
-  {{d-button action="refresh" icon="refresh" class="btn-primary" label="akismet.refresh" disabled=performingAction}}
-
-  {{#if length}}
-    <h3 class='review-queue'>{{i18n "akismet.posts_to_review"}}</h3>
-
-    <div class="row">
-      <table class='akismet-queue'>
-        <thead>
-          <th>{{i18n "akismet.post_id"}}</th>
-          <th>{{i18n "akismet.post_body"}}</th>
-          <th>{{i18n "akismet.posted_by"}}</th>
-          <th></th>
-        </thead>
-        {{#each post in model}}
-          <tbody>
-            <td class="post-id">
-              <a {{bind-attr href="post.url"}} target="_blank">{{post.id}}</a>
-            </td>
-            <td class="cooked">
-              {{{post.cooked}}}
-            </td>
-            <td class="poster">
-              {{#link-to 'adminUser' post.username}}
-                {{avatar post imageSize="small"}}
-                {{post.username}}
-              {{/link-to}}
-            </td>
-            <td class="queue-actions">
-              {{d-button action="confirmSpamPost"
-                            actionParam=post
-                            icon="check"
-                            class="btn-primary"
-                            label="akismet.confirm_spam"
-                            disabled=performingAction}}
-
-              {{d-button action="allowPost"
-                            actionParam=post
-                            icon="thumbs-o-up"
-                            label="akismet.not_spam"
-                            disabled=performingAction}}
-
-              {{#if post.user_id}}
-                {{d-button action="deleteUser"
-                              actionParam=post
-                              icon="trash-o"
-                              class="btn-danger"
-                              label="akismet.confirm_delete"
-                              disabled=performingAction}}
-              {{/if}}
-            </td>
-          </tbody>
-        {{/each}}
-      </table>
-    </div>
   {{/if}}
 {{else}}
   {{#if currentUser.admin}}

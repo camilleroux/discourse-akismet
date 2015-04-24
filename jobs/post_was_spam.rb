@@ -1,9 +1,8 @@
 module Jobs
-  class UpdateAkismetStatus < Jobs::Base
+  class PostWasSpam < Jobs::Base
 
     def execute(args)
       raise Discourse::InvalidParameters.new(:post_id) unless args[:post_id].present?
-      raise Discourse::InvalidParameters.new(:status) unless args[:status].present?
 
       return unless SiteSetting.akismet_enabled?
 
@@ -11,11 +10,7 @@ module Jobs
       return unless post.present?
 
       DiscourseAkismet.with_client do |client|
-        if args[:status] == 'ham'
-          client.submit_ham(*DiscourseAkismet.args_for_post(post))
-        elsif args[:status] == 'spam'
-          client.submit_spam(*DiscourseAkismet.args_for_post(post))
-        end
+        client.submit_spam(nil, nil, DiscourseAkismet.args_for_post(post))
       end
     end
   end

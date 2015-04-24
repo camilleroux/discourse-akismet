@@ -3,46 +3,76 @@
 # version: 0.1.0
 # authors: Michael Verdi, Robin Ward
 # url: https://github.com/discourse/discourse-akismet
+# required version: 1.3.0.beta6
 
 # install dependencies
 gem "akismet", "1.0.2"
 
 # load the engine
 load File.expand_path('../lib/discourse_akismet.rb', __FILE__)
-load File.expand_path('../lib/discourse_akismet/engine.rb', __FILE__)
 
-register_asset "stylesheets/mod_queue_styles.scss"
+register_asset "stylesheets/akismet.scss"
 
 after_initialize do
   require_dependency File.expand_path('../jobs/check_for_spam_posts.rb', __FILE__)
-  require_dependency File.expand_path('../jobs/check_akismet_post.rb', __FILE__)
-  require_dependency File.expand_path('../jobs/update_akismet_status.rb', __FILE__)
+  require_dependency File.expand_path('../jobs/post_was_spam.rb', __FILE__)
+  require_dependency File.expand_path('../jobs/reviewed_akismet_post.rb', __FILE__)
 
-
-  # Store extra data for akismet
-  on(:post_created) do |post, params|
-    if DiscourseAkismet.should_check_post?(post)
-      DiscourseAkismet.move_to_state(post, 'new', params)
-
-      # Enqueue checks for TL0 posts faster
-      Jobs.enqueue(:check_akismet_post, post_id: post.id) if post.user.trust_level == 0
-    end
-  end
+  QueuedPost.visible_queues << 'akismet_to_review'
 
   # When staff agrees a flagged post is spam, send it to akismet
   on(:confirmed_spam_post) do |post|
     if SiteSetting.akismet_enabled?
-      Jobs.enqueue(:update_akismet_status, post_id: post.id, status: 'spam')
+      Jobs.enqueue(:post_was_spam, post_id: post.id)
     end
   end
 
-  add_to_class(:guardian, :can_review_akismet?) do
-    user.try(:staff?)
+  on(:approved_post) do |queued_post|
+    if queued_post.queue == 'akismet_to_review'
+      Jobs.enqueue(:reviewed_akismet_post, queued_post_id: queued_post.id)
+    end
   end
 
-  add_to_serializer(:current_user, :akismet_review_count) do
-    scope.can_review_akismet? ? DiscourseAkismet.needs_review.count : nil
+  on(:rejected_post) do |queued_post|
+    if queued_post.queue == 'akismet_to_review'
+      Jobs.enqueue(:reviewed_akismet_post, queued_post_id: queued_post.id)
+    end
   end
+
+  begin
+    require_dependency 'new_post_manager'
+    require_dependency 'queued_post'
+
+    ::NewPostManager.add_handler do |manager|
+      result = nil
+      if SiteSetting.akismet_enabled?
+
+        # We only run it on certain trust levels
+        next if manager.user.has_trust_level?(TrustLevel[SiteSetting.skip_akismet_trust_level.to_i])
+
+        # We don't run akismet on private messages
+        topic_id = manager.args["topic_id"].to_i
+        if topic_id != 0
+          topic = Topic.find(topic_id)
+          next if topic.private_message?
+        end
+
+        # We only check posts over 20 chars
+        stripped = manager.args['raw'].strip
+        next if stripped.size < 20
+
+        # If the entire post is a URI we skip it. This might seem counter intuitive but
+        # Discourse already has settings for max links and images for new users. If they
+        # pass it means the administrator specifically allowed them.
+        uri = URI(stripped) rescue nil
+        next if uri
+
+        result = manager.enqueue('akismet_to_check')
+      end
+      result
+    end
+  end
+
 end
 
 add_admin_route 'akismet.title', 'akismet'
