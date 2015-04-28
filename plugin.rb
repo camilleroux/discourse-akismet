@@ -43,7 +43,7 @@ after_initialize do
     require_dependency 'new_post_manager'
     require_dependency 'queued_post'
 
-    ::NewPostManager.add_handler do |manager|
+    ::NewPostManager.add_handler(100) do |manager|
       result = nil
       if SiteSetting.akismet_enabled?
 
