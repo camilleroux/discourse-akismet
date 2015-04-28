@@ -14,7 +14,7 @@ load File.expand_path('../lib/discourse_akismet.rb', __FILE__)
 register_asset "stylesheets/akismet.scss"
 
 after_initialize do
-  require_dependency File.expand_path('../jobs/check_for_spam_posts.rb', __FILE__)
+  require_dependency File.expand_path('../jobs/check_akismet_post.rb', __FILE__)
   require_dependency File.expand_path('../jobs/post_was_spam.rb', __FILE__)
   require_dependency File.expand_path('../jobs/reviewed_akismet_post.rb', __FILE__)
 
@@ -68,6 +68,7 @@ after_initialize do
         next if uri
 
         result = manager.enqueue('akismet_to_check', 'akismet')
+        Jobs.enqueue(:check_akismet_post, queued_post_id: result.queued_post.id)
       end
       result
     end

@@ -61,7 +61,6 @@ module DiscourseAkismet
       end
     end
 
-    # qp.change_queue('akismet_to_review')
     QueuedPost.where(id: to_review).update_all(queue: 'akismet_to_review')
     QueuedPost.broadcast_new!
 
