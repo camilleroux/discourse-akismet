@@ -1,5 +1,10 @@
 en:
   js:
+    queue_reason:
+      akismet:
+        title: "Scanning Your Post for Spam"
+        description: "Newer users of this forum need to have their posts checked for spam. Your post should appear shortly."
+
     akismet:
       title: "Akismet"
 

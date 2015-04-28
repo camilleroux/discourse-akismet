@@ -67,7 +67,7 @@ after_initialize do
         uri = URI(stripped) rescue nil
         next if uri
 
-        result = manager.enqueue('akismet_to_check')
+        result = manager.enqueue('akismet_to_check', 'akismet')
       end
       result
     end
