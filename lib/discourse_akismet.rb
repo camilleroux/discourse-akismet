@@ -50,13 +50,20 @@ module DiscourseAkismet
   def self.check_for_spam(to_check)
     return if to_check.blank?
 
+    spam_count = 0
     to_review = []
     DiscourseAkismet.with_client do |client|
       [to_check].flatten.each do |qp|
+
         if client.comment_check(*DiscourseAkismet.args_for_queued_post(qp))
+          spam_count += 1
           to_review << qp.id
         else
-          qp.approve!(Discourse.system_user)
+          if NewPostManager.user_needs_approval?(qp.user)
+            to_review << qp.id
+          else
+            qp.approve!(Discourse.system_user)
+          end
         end
       end
     end
@@ -66,7 +73,7 @@ module DiscourseAkismet
 
     # Trigger an event that akismet found spam. This allows people to
     # notify chat rooms or whatnot
-    DiscourseEvent.trigger(:akismet_found_spam, to_review.size) if to_review.size > 0
+    DiscourseEvent.trigger(:akismet_found_spam, to_review.size) if spam_count > 0
   end
 
   def self.stats
